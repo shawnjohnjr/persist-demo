@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <p>Let's persist a site.</p>
+
+  <button onclick="persistSite()">Persist me</button>
+  <button onclick="startAddingData()">Start adding data</button>
+  <button onclick="stopAddingData()">Stop adding data</button>
+
+  <p id="status"></p>
+  <p id="status-count"></p>
+
+  <script>
+    function openDB(dbname, objectStoreName) {
+      return new Promise(function (resolve, reject) {
+        let openRequest = indexedDB.open(dbname);
+        openRequest.onerror = function () { reject(openRequest.error); };
+        openRequest.onupgradeneeded = function (event) {
+          openRequest.result.createObjectStore(objectStoreName);
+        };
+        openRequest.onsuccess = function () { resolve(openRequest.result); };
+      });
+    }
+
+    function persistSite() {
+      navigator.storage.persist().then((result) => {
+        if (result) {
+          document.getElementById("status").innerHTML = "Site is persisted";
+        } else {
+          document.getElementById("status").innerHTML = "Persist failed";
+        }
+      })
+    }
+
+    let count = 0;
+    let shouldAddData = false;
+
+    function startAddingData() {
+      shouldAddData = true;
+      addDataToIndexedDB();
+    }
+
+    let db = null;
+    let dbname = 'storageDB';
+    let objectStoreName = 'storageManager';
+    function connectToDB() {
+      return new Promise((resolve) => {
+        if (db === null) {
+          openDB(dbname, objectStoreName).then((result) => {
+            db = result;
+            resolve(db);
+          })
+        } else {
+          resolve(db);
+        }
+      })
+    }
+
+    function addDataToIndexedDB() {
+      if (shouldAddData) {
+        //Create an array buffer with the size of 5MB
+        let size = 5000000;
+        let buffer = new ArrayBuffer(size);
+        let testBlob = new Blob([buffer], { type: 'binary/random' });
+        let dbTransaction;
+
+        //Open an indexeddb connection
+        connectToDB().then((result) => {
+          dbTransaction = result;
+          // Store the blob into the indexeddb
+          let txn1 = dbTransaction.transaction(objectStoreName, 'readwrite');
+          txn1.objectStore(objectStoreName).add(testBlob, count);
+          txn1.oncomplete = function () {
+            count++;
+            document.getElementById("status").innerHTML = "Number of iterations " + count;
+            document.getElementById("status-count").innerHTML = "Data added to indexeddb: " + (count * size / 1048576).toFixed(0) + " MB";
+            addDataToIndexedDB();
+          }
+        });
+      }
+    }
+
+    function stopAddingData() {
+      shouldAddData = false;
+      db.close();
+      db = null;
+    }
+  </script>
+
+</body>
+
+</html>

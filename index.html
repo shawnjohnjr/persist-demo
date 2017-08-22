@@ -6,6 +6,7 @@
   <button onclick="persistSite()">Persist me</button>
   <button onclick="startAddingData()">Start adding data</button>
   <button onclick="stopAddingData()">Stop adding data</button>
+  <button onclick="initQuotaManager()">init quota manager</button>
 
   <p id="status"></p>
   <p id="status-count"></p>
@@ -85,6 +86,19 @@
       db.close();
       db = null;
     }
+
+    function initQuotaManager() {
+      //Open an indexeddb connection
+      connectToDB().then((result) => {
+        dbTransaction = result;
+        // get blob data
+        let txn1 = dbTransaction.transaction(objectStoreName, 'readwrite');
+        var objectStores = txn1.objectStore(objectStoreName);
+        var request = objectStores.get(1);
+
+      });
+    }
+
   </script>
 
 </body>

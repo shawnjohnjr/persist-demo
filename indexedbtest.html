@@ -3,7 +3,7 @@
 // This works on all devices/browsers, and uses IndexedDBShim as a final fallback 
 let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
-for (let i=1;i<100;i++) {
+for (let i=1;i<100000;i++) {
 // Open (or create) the database
 let open = indexedDB.open("MyDatabase"+i, 1);
 
